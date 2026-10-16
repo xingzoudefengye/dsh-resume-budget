@@ -1,0 +1,18 @@
+# dsh-resume-budget bundle patch.
+#
+# One row: a policy that runs before the first step of a restored session and
+# compacts the history when the projection is already over the ceiling. It
+# adds no storage, no background work, and no model calls of its own — it
+# reuses the mounted compaction backend and the token meter.
+#
+# The threshold is stated explicitly so the number is visible in the composed
+# tree rather than only in this package's defaults.
+
+- insert:
+    - id: resume-budget
+      name: 'dsh-resume-budget'
+      config:
+        # Projected input tokens for a resumed session's first request, above
+        # which the history is compacted before that request is sent. 0
+        # disables the check; the policy never fails a turn either way.
+        thresholdTokens: 100000
