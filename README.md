@@ -55,6 +55,12 @@ harness 自带的 `compaction-basic` 有压力压缩：一轮里预计输入超�
 scripts/check.sh web 100000
 ```
 
+## 安装
+
+```bash
+dsh plugin --profile web add github:xingzoudefengye/dsh-resume-budget
+```
+
 ## 证据边界
 
 - 阈值是**触发线**，不是服务商的精确 tokenizer 结果，也不是绝对的请求上限；`measure()` 是启发式估算。
