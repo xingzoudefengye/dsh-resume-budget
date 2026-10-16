@@ -14,7 +14,7 @@ harness 自带的 `compaction-basic` 有压力压缩：一轮里预计输入超�
 |---|---|
 | 会话是**新建**的 | 不检查（`firstLiveSeq` 为 0，说明本进程内没有恢复来的前缀） |
 | 恢复的会话，预计输入 < 阈值 | 不压缩，检查作废 |
-| 恢复的会话，预计输入 ≥ 阈值 | 调 `ctx.compaction.compactNow()` 先压缩，再发请求 |
+| 恢复的会话，预计输入 ≥ 阈值 | 调 `ctx.compaction.compactIfNeeded(agent, "context-overflow", signal)` 先压缩，再发请求 |
 | 压缩成功 / 没有可压缩历史 | 检查作废（一次性） |
 | 压缩失败或抛错 | **只记 warning，绝不打断回合**；检查保持 pending，下一个 step 重试 |
 | 压缩被取消 | 保持 pending（取消不等于同意） |
@@ -30,10 +30,14 @@ harness 自带的 `compaction-basic` 有压力压缩：一轮里预计输入超�
 
 ## 度量与压缩都用官方的口子
 
-- 度量：`ctx.tokenMeter.measure(session).totalTokens`（和压力压缩同一套）。
-- 压缩：`ctx.compaction.compactNow(agent, signal)` —— 与 `/compact` 命令同一个入口。
+- 度量：`ctx.tokenMeter.measure(session).totalTokens`（和压力压缩同一套，不传 request header）。
+- 压缩：`ctx.compaction.compactIfNeeded(agent, "context-overflow", signal)`。
 
-所以它不新增存储、不新增后台任务、**自己不发起任何模型调用**。
+**为什么不是 `compactNow()`。** 它是 `/compact` 那个显式入口，把工作包在 `agent.runMaintenance` 里 —— 而 `runMaintenance` **要求 agent 空闲**，回合进行中会直接抛 `manual compaction requires an idle agent with no waking queued work`。`agent/pre-step` 恰好就是回合进行中的状态，所以那个入口在这里**必然失败**（实测踩到的坑，不是推测）。
+
+`"context-overflow"` 是官方压力压缩**在同一个接缝上**用的分支：先跑 tool-result 剪枝，再选出可压缩区间，走同一条 `compactRegion` 路径 —— 不用 `runMaintenance`，也不会拿窗口比例阈值覆盖本插件自己的绝对阈值。
+
+所以它不新增存储、不新增后台任务、**自己不发起任何模型调用**（压缩那一次调用由压缩后端发起，和压力压缩、`/compact` 完全一样）。
 
 ## 挂载
 
