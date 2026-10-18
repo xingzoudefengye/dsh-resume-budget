@@ -1,6 +1,6 @@
 {
   "name": "dsh-resume-budget",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Resume input budget for DeepSeek Harness: before a restored session re-sends its whole history, check the projection and compact first when it is over the ceiling.",
   "type": "module",
   "main": "lib/index.js",
@@ -19,8 +19,8 @@
   ],
   "scripts": {
     "test": "node --test",
-    "dev-link": "scripts/dev-link.sh",
-    "check": "scripts/check.sh"
+    "dev-link": "node scripts/dev-link.mjs",
+    "check": "node scripts/check.mjs"
   },
   "dsh": {
     "bundle": {
