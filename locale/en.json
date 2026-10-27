@@ -1,0 +1,5 @@
+{
+  "meta": {
+    "description": "Resume input budget for DeepSeek Harness: before a restored session re-sends its whole history, check the projection and compact first when it is over the ceiling."
+  }
+}
